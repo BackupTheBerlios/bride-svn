@@ -8,11 +8,20 @@ import optparse, os, cPickle
 import wx
 import SrcFrame, StatusWindow
 
+try:
+    from IPython.Shell import IPShellWX
+except ImportError, e:
+    print 'IPython support disabled'
+else:
+    __HAS_IPYTHON__ = True
+    import IPythonFrame
+
 ID_GOTO = 6000
 ID_SEARCH = 6001
 ID_REPLACE = 6002
 ID_RECENT = 6003
 ID_RECENT_FILES = 6004 # skip to 6014 (10 empty slots)
+ID_IPYTHON = 6014
 
 class Workspace(wx.Frame):
     def __init__(self, app):
@@ -25,7 +34,7 @@ class Workspace(wx.Frame):
         self.InitMenu()
 
     def InitMenu(self):
-        menu = (('&File', (('&New', wx.ID_NEW, self.OnNew),
+        menu = [('&File', (('&New', wx.ID_NEW, self.OnNew),
                            ('&Open', wx.ID_OPEN, self.OnOpen),
                            ('&Save', wx.ID_SAVE, self.OnSave),
                            ('Save as...', wx.ID_SAVEAS, self.OnSaveAs),
@@ -42,7 +51,9 @@ class Workspace(wx.Frame):
                            None,
                            ('Goto...', ID_GOTO, self.OnGoto),
                            ('Search...', ID_SEARCH, self.OnSearch),
-                           ('Replace...', ID_REPLACE, self.OnReplace))))
+                           ('Replace...', ID_REPLACE, self.OnReplace)))]
+        if __HAS_IPYTHON__:
+            menu.append(('&Tools', (('IPython', ID_IPYTHON, self.OnIPython),)))
         mbar = wx.MenuBar()
         self._populate_menubar(mbar, menu)
         recent = wx.Menu()
@@ -67,6 +78,13 @@ class Workspace(wx.Frame):
                 menu.Append(i[1], i[0])
                 wx.EVT_MENU(self, i[1], i[2])
                 
+    def OnIPython(self, evt):
+        if __HAS_IPYTHON__:
+            ipshell = IPShellWX()
+            ipshell.run()
+            #IPythonFrame.create(self)
+        else:
+            pass
 
     def OnExit(self, evt):
         if self.OnCloseAll(evt):
@@ -111,7 +129,7 @@ class Workspace(wx.Frame):
                 self.book.GetPage(sel).Save(filename)
 
     def ClosePage(self, index):
-        if self.book.GetPage(index).text.IsModified():
+        if self.book.GetPage(index).IsModified():
             return False
         else:
             success = self.book.DeletePage(index)
