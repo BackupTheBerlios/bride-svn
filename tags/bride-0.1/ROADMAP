@@ -1,0 +1,84 @@
+*** 0.1 ***
+
+Integrate wx.stc.StyledTextCtrl:
+ - undo/redo (provided)
+ - cut/copy/paste (provided)
+ - display of line numbers (provided)
+
+Basic editing functions:
+ - recent files (done)
+ - goto line (done)
+ - search (done)
+ - replace (done)
+
+Refactoring 
+ - move global app data (recent files list, ...) to Bride object (done)
+ - new mechanism for menu initialization (done)
+ - enabling/disabling of menu commands if documents are opened or not (done)
+ - remove SrcFrame/SrcCtrl splitting (done)
+
+*** 0.2 ***
+
+Fixes and enhancements:
+ - storing workspace settings on exit
+ - ensure visibility of the selection under search/replace
+ - reimplement IsModified() in SrcFrame to prevent from unadvertendly close modified files
+ - add star in doc name when the doc is modified
+ - confirmation before exiting if unsaved files are present
+ - fonts configuration
+ - solve 'conflict' when reopening the same file
+ - dynamic update of recent files menu
+ - tabs-navigation 
+ - improve statwin input mechanism
+
+Testing on win32
+
+Refactoring
+
+*** 0.3 ***
+
+implement EMACS features I'm currently using:
+ - customizable keybindings + EMACS mode
+ - syntax highlight
+ - parenthesis highlighting
+ - autoindent
+ - indent/unindent
+ - comment/uncomment
+
+Refactoring.
+
+*** 0.4 ***
+
+Fixes and enhancements:
+ - ...
+
+Distribution files
+
+Documentation
+
+Refactoring.
+
+*** 0.5 ***
+
+Advanced code features:
+ - help window
+ - autocompletion
+ - block compress/expand
+ - syntax check
+
+Integration with external tools:
+ - versioning systems (subversion)
+ - docs generation (epydoc)
+ - code metrics (pylint)
+ - code static check (pychecker)
+ - interactive shell (IPython)
+
+Refactoring.
+
+*** 0.6 ***
+
+Fixes and enhancements:
+ - ...
+
+Refactoring.
+
