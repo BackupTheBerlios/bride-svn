@@ -129,7 +129,8 @@ class Workspace(wx.Frame):
             return False
         else:
             success = self.book.DeletePage(index)
-            self.book.SetSelection(0)
+            if self.book.GetPageCount() > 0:
+                self.book.SetSelection(0)
             return success
 
     def OnClose(self, evt):
