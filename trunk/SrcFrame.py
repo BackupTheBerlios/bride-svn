@@ -4,15 +4,15 @@
 
 import os.path
 import wx
+import wx.stc as stc
 import SrcCtrl
 
 class SrcFrame(wx.Window):
     def __init__(self, parent, id, filename=None):
-        wx.Window.__init__(self, parent, id)
+        wx.Window.__init__(self, parent, id, wx.DefaultPosition, parent.GetSize())
         self.filename = None
         self.parent = parent
-        self.text = SrcCtrl.create(self, -1, '', 
-                                   style=(wx.TE_MULTILINE | wx.TE_RICH2))
+        self.text = SrcCtrl.create(self, -1)
         wx.EVT_TEXT(self, self.text.GetId(), self.OnChange)
         self.text.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
         if filename:
@@ -24,7 +24,11 @@ class SrcFrame(wx.Window):
         This can raise an IOError.
         """
         self.filename = filename
-        self.text.SetValue(open(filename).read())
+        self.text.SetText(open(filename).read())
+        self.text.EmptyUndoBuffer()
+        self.text.Colourise(0, -1)
+        self.text.SetMarginType(1, stc.STC_MARGIN_NUMBER)
+        self.text.SetMarginWidth(1, 25)
 
     def Save(self, filename=None):
         if filename:
