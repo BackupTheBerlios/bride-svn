@@ -25,34 +25,42 @@ Fixes and enhancements:
  - dynamic update of recent files menu (done)
  - tabs-navigation (done)
  - ensuring visibility in search/replace (done)
- - improve statwin input mechanism
- - solve 'conflict' when reopening the same file (?)
- - bug in recent files list update (on fedora, to be checked)
+ - when loading a file already opened, ask if use the same page (done)
+
+Some EMACS features:
+ - EMACS keybindings
+ - syntax highlighting
+ - parenthesis highlighting
+ - autoindent
+
+Help window from inline docs.
+
+Integration with Subversion.
+
+Refactoring:
+ - move all docman functionalities from Workspace to a mixin class
+
+*** 0.3 ***
+
+Customization StyledTextCtrl:
+ - fonts
+ - keybindings
+
+implement EMACS features I'm currently using:
+ - indent/unindent
+ - comment/uncomment
 
 Testing on win32
 
 Refactoring
 
-*** 0.3 ***
-
-Configure StyledTextCtrl:
- - fonts
- - ...
-
-implement EMACS features I'm currently using:
- - customizable keybindings + EMACS mode
- - syntax highlight
- - parenthesis highlighting
- - autoindent
- - indent/unindent
- - comment/uncomment
-
-Refactoring.
-
 *** 0.4 ***
+
+Improve statwin input mechanism if possible, or throw it away if not.
 
 Fixes and enhancements:
  - storing workspace settings on exit
+ - bug in recent files list update (on fedora, to be checked)
 
 Distribution files
 
@@ -63,13 +71,11 @@ Refactoring.
 *** 0.5 ***
 
 Advanced code features:
- - help window
  - autocompletion
  - block compress/expand
  - syntax check
 
 Integration with external tools:
- - versioning systems (subversion)
  - docs generation (epydoc)
  - code metrics (pylint)
  - code static check (pychecker)

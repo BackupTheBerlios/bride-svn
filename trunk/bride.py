@@ -38,6 +38,7 @@ class Workspace(wx.Frame):
         self.book = wx.Notebook(self, -1)
         self.statwin = StatusWindow.create(self, (0,550), (800,50))
         self.recent = app.recent
+        self.open = []
         self.InitMenu()
         self.InitSizer()
         self.SetSize((800, 600))
@@ -232,27 +233,48 @@ class Workspace(wx.Frame):
     ######### OTHERS METHODS ################
 
     def Load(self, filename):
-        SrcCtrl.create(self, filename)
-        self.EnableMenuCommands(True)
         absname = os.path.abspath(filename)
+        if absname in self.open:
+            msg = 'Document already open. Reload in the same page?'
+            dlg = wx.MessageDialog(self, msg, 'Reload', wx.YES_NO)
+            if dlg.ShowModal() == wx.ID_YES:
+                self.Reload(absname)
+            return None
+        else:
+            self.open.append(absname)
+        SrcCtrl.create(self, absname)
+        self.EnableMenuCommands(True)
         if absname in self.recent:
             self.recent.remove(absname)
         self.recent.append(absname)
         self._update_recent_menu()
+        return None
+
+    def Reload(self, filename):
+        for i in xrange(self.book.GetPageCount()):
+            page = self.book.GetPage(i)
+            if page.filename == filename:
+                page.Open(filename)
+                self.book.SetSelection(i)
+                page.SetFocus()
+                break
 
     def GetSelectedPage(self):
         return self.book.GetPage(self.book.GetSelection())
         
     def ClosePage(self, index, ask=True):
-        if self.book.GetPage(index).IsModified() and ask:
+        page = self.book.GetPage(index)
+        if page.IsModified() and ask:
             msg = 'Some modifications are not saved. Close anyway?'
             dlg = wx.MessageDialog(self, msg, 'Close all', wx.YES_NO)
             if dlg.ShowModal() == wx.ID_NO:
                 return 0
             else:
                 return -1
+        fn = page.filename
         success = self.book.DeletePage(index)
         if success:
+            self.open.remove(fn)
             if self.book.GetPageCount() > 0:
                 self.book.SetSelection(0)
             else:
