@@ -7,6 +7,9 @@ Basic editing functions:
  - goto line (done)
  - search (done)
  - replace (done)
+
+Integrate wx.stc.StyledTextCtrl:
+ - undo/redo
  
 Refactoring 
  - move global app data (recent files list, ...) to Bride object
@@ -24,10 +27,6 @@ Stable branch of 0.1:
  - dynamic update of recent files
 
 *** 0.3 ***
-
-Undo/redo
-
-Consider use of wx.stc.StyledTextCtrl
 
 implement EMACS features I'm currently using:
  - customizable keybindings + EMACS mode
