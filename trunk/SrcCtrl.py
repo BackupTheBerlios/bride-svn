@@ -28,26 +28,25 @@ class SrcCtrl(stc.StyledTextCtrl):
     fold_symbols = 2
 
     def __init__(self, parent, filename):
-        #stc.StyledTextCtrl.__init__(self, parent, -1, wx.DefaultPosition, parent.GetSize())
         stc.StyledTextCtrl.__init__(self, parent, -1)
-
         self.filename = None
         self.parent = parent
         if filename:
             self.Open(filename)
-
-        # set up tab navigation
-        self.CmdKeyAssign(stc.STC_KEY_PRIOR, stc.STC_SCMOD_CTRL,
-                          stc.STC_CMD_ZOOMOUT)
-        self.CmdKeyAssign(stc.STC_KEY_NEXT, stc.STC_SCMOD_CTRL,
-                          stc.STC_CMD_ZOOMOUT)
-
-        self.CmdKeyAssign(ord('B'), stc.STC_SCMOD_CTRL, stc.STC_CMD_ZOOMIN)
-        self.CmdKeyAssign(ord('N'), stc.STC_SCMOD_CTRL, stc.STC_CMD_ZOOMOUT)
-
-
         self.SetLexer(stc.STC_LEX_PYTHON)
         self.SetKeyWords(0, " ".join(keyword.kwlist))
+        self._set_styles()
+        # indentation
+        self.SetUseTabs(False)
+        self.SetIndent(4)
+        self.SetBackSpaceUnIndents(True)
+        self.SetTabIndents(True)
+        # set up zoom in/out
+        self.CmdKeyClear(ord('X'), stc.STC_SCMOD_CTRL)
+        self.CmdKeyClear(stc.STC_KEY_PRIOR, stc.STC_SCMOD_CTRL)
+        self.CmdKeyClear(stc.STC_KEY_NEXT, stc.STC_SCMOD_CTRL)
+        self.CmdKeyAssign(ord('B'), stc.STC_SCMOD_CTRL, stc.STC_CMD_ZOOMIN)
+        self.CmdKeyAssign(ord('N'), stc.STC_SCMOD_CTRL, stc.STC_CMD_ZOOMOUT)
 
         self.SetProperty("fold", "1")
         self.SetProperty("tab.timmy.whinge.level", "1")
@@ -110,68 +109,128 @@ class SrcCtrl(stc.StyledTextCtrl):
             self.MarkerDefine(stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_TCORNER,           "white", "#808080")
 
 
-        #self.Bind(stc.EVT_STC_UPDATEUI, self.OnUpdateUI)
         #self.Bind(stc.EVT_STC_MARGINCLICK, self.OnMarginClick)
-        self.Bind(wx.EVT_KEY_DOWN, self.OnKeyPressed)
-
-        # Make some styles,  The lexer defines what each style is used for, we
-        # just have to define what each style looks like.  This set is adapted from
-        # Scintilla sample property files.
-
-        # Global default styles for all languages
-        self.StyleSetSpec(stc.STC_STYLE_DEFAULT,     "face:%(helv)s,size:%(size)d" % faces)
-        self.StyleClearAll()  # Reset all to be like the default
-
-        # Global default styles for all languages
-        self.StyleSetSpec(stc.STC_STYLE_DEFAULT,     "face:%(helv)s,size:%(size)d" % faces)
-        self.StyleSetSpec(stc.STC_STYLE_LINENUMBER,  "back:#C0C0C0,face:%(helv)s,size:%(size2)d" % faces)
-        self.StyleSetSpec(stc.STC_STYLE_CONTROLCHAR, "face:%(other)s" % faces)
-        self.StyleSetSpec(stc.STC_STYLE_BRACELIGHT,  "fore:#FFFFFF,back:#0000FF,bold")
-        self.StyleSetSpec(stc.STC_STYLE_BRACEBAD,    "fore:#000000,back:#FF0000,bold")
-
-        # Python styles
-        # Default 
-        self.StyleSetSpec(stc.STC_P_DEFAULT, "fore:#000000,face:%(helv)s,size:%(size)d" % faces)
-        # Comments
-        self.StyleSetSpec(stc.STC_P_COMMENTLINE, "fore:#007F00,face:%(other)s,size:%(size)d" % faces)
-        # Number
-        self.StyleSetSpec(stc.STC_P_NUMBER, "fore:#007F7F,size:%(size)d" % faces)
-        # String
-        self.StyleSetSpec(stc.STC_P_STRING, "fore:#7F007F,face:%(helv)s,size:%(size)d" % faces)
-        # Single quoted string
-        self.StyleSetSpec(stc.STC_P_CHARACTER, "fore:#7F007F,face:%(helv)s,size:%(size)d" % faces)
-        # Keyword
-        self.StyleSetSpec(stc.STC_P_WORD, "fore:#00007F,bold,size:%(size)d" % faces)
-        # Triple quotes
-        self.StyleSetSpec(stc.STC_P_TRIPLE, "fore:#7F0000,size:%(size)d" % faces)
-        # Triple double quotes
-        self.StyleSetSpec(stc.STC_P_TRIPLEDOUBLE, "fore:#7F0000,size:%(size)d" % faces)
-        # Class name definition
-        self.StyleSetSpec(stc.STC_P_CLASSNAME, "fore:#0000FF,bold,underline,size:%(size)d" % faces)
-        # Function or method name definition
-        self.StyleSetSpec(stc.STC_P_DEFNAME, "fore:#007F7F,bold,size:%(size)d" % faces)
-        # Operators
-        self.StyleSetSpec(stc.STC_P_OPERATOR, "bold,size:%(size)d" % faces)
-        # Identifiers
-        self.StyleSetSpec(stc.STC_P_IDENTIFIER, "fore:#000000,face:%(helv)s,size:%(size)d" % faces)
-        # Comment-blocks
-        self.StyleSetSpec(stc.STC_P_COMMENTBLOCK, "fore:#7F7F7F,size:%(size)d" % faces)
-        # End of line where string is not closed
-        self.StyleSetSpec(stc.STC_P_STRINGEOL, "fore:#000000,face:%(mono)s,back:#E0C0E0,eol,size:%(size)d" % faces)
-
-        self.SetCaretForeground("BLUE")
-
+        self.Bind(stc.EVT_STC_UPDATEUI, self.OnUpdateUI)
+        #self.Bind(wx.EVT_KEY_DOWN, self.OnKeyPressed)
         self.frame = parent
+
+    def _set_styles(self):
+        # Global default styles for all languages
+        self.StyleSetSpec(stc.STC_STYLE_DEFAULT,
+                          "face:%(mono)s,size:%(size)d" % faces)
+        self.StyleClearAll()  # Reset all to be like the default
+        self.StyleSetSpec(stc.STC_STYLE_DEFAULT,
+                          "face:%(mono)s,size:%(size)d" % faces)
+        self.StyleSetSpec(stc.STC_STYLE_LINENUMBER, 
+                          "back:#C0C0C0,face:%(helv)s,size:%(size2)d" % faces)
+        self.StyleSetSpec(stc.STC_STYLE_CONTROLCHAR,
+                          "face:%(other)s" % faces)
+        self.StyleSetSpec(stc.STC_STYLE_BRACELIGHT,
+                          "fore:#FFFFFF,back:#30B81B,bold")
+        self.StyleSetSpec(stc.STC_STYLE_BRACEBAD,
+                          "fore:#000000,back:#FF0000,bold")
+        # Python styles
+        self.StyleSetSpec(stc.STC_P_DEFAULT,
+                          "fore:#000000,face:%(mono)s,size:%(size)d" % faces)
+        # Comments
+        self.StyleSetSpec(stc.STC_P_COMMENTLINE,
+                          "fore:#007F00,face:%(other)s,size:%(size)d" % faces)
+        # Number
+        self.StyleSetSpec(stc.STC_P_NUMBER,
+                          "fore:#007F7F,size:%(size)d" % faces)
+        # String
+        self.StyleSetSpec(stc.STC_P_STRING,
+                          "fore:#7F007F,face:%(mono)s,size:%(size)d" % faces)
+        # Single quoted string
+        self.StyleSetSpec(stc.STC_P_CHARACTER,
+                          "fore:#7F007F,face:%(mono)s,size:%(size)d" % faces)
+        # Keyword
+        self.StyleSetSpec(stc.STC_P_WORD,
+                          "fore:#00007F,bold,size:%(size)d" % faces)
+        # Triple quotes
+        self.StyleSetSpec(stc.STC_P_TRIPLE,
+                          "fore:#7F0000,size:%(size)d" % faces)
+        # Triple double quotes
+        self.StyleSetSpec(stc.STC_P_TRIPLEDOUBLE,
+                          "fore:#7F0000,size:%(size)d" % faces)
+        # Class name definition
+        self.StyleSetSpec(stc.STC_P_CLASSNAME,
+                          "fore:#0000FF,bold,underline,size:%(size)d" % faces)
+        # Function or method name definition
+        self.StyleSetSpec(stc.STC_P_DEFNAME,
+                          "fore:#007F7F,bold,size:%(size)d" % faces)
+        # Operators
+        self.StyleSetSpec(stc.STC_P_OPERATOR,
+                          "bold,size:%(size)d" % faces)
+        # Identifiers
+        self.StyleSetSpec(stc.STC_P_IDENTIFIER,
+                          "fore:#000000,face:%(mono)s,size:%(size)d" % faces)
+        # Comment-blocks
+        self.StyleSetSpec(stc.STC_P_COMMENTBLOCK,
+                          "fore:#7F7F7F,size:%(size)d" % faces)
+        # End of line where string is not closed
+        self.StyleSetSpec(stc.STC_P_STRINGEOL,
+                          "fore:#000000,face:%(mono)s,back:#E0C0E0,eol,size:%(size)d" % faces)
+        self.SetCaretForeground("BLUE")
 
     def OnKeyPressed(self, event):
         key = event.KeyCode()
-        if key == 313 and event.ControlDown(): # CTRL+PGDWN
-            self.parent.AdvanceSelection(True)
-        elif key == 312 and event.ControlDown(): # CTRL+PGUP
-            self.parent.AdvanceSelection(False)
+        if key == 13: # ENTER
+            self._autoindent()
         else:
             event.Skip()
+            
+    def OnUpdateUI(self, evt):
+        self._check_braces()
+        self._show_help()
 
+    def _autoindent(self):
+        line = self.GetCurrentLine()
+        ind = self.GetLineIndentation(line) / self.GetIndent()
+        caretPos = self.GetCurrentPos()
+        if caretPos > 0:
+            charBefore = self.GetCharAt(caretPos - 1)
+            if chr(charBefore) is ":":
+                ind += 1
+        self.NewLine()
+        for i in range(ind):
+            self.Tab()
+
+    def _check_braces(self):
+        """Matching braces.
+
+        Taken from StyledTextrCtrl demo.
+        """
+        braceOpposite = -1
+        braceAtCaret = -1
+        caretPos = self.GetCurrentPos()
+        if caretPos > 0:
+            charBefore = self.GetCharAt(caretPos - 1)
+            styleBefore = self.GetStyleAt(caretPos - 1)
+            # check before
+            if (chr(charBefore) in "[]{}()" and 
+                styleBefore == stc.STC_P_OPERATOR):
+                braceAtCaret = caretPos - 1
+        # check after
+        if braceAtCaret < 0:
+            charAfter = self.GetCharAt(caretPos)
+            styleAfter = self.GetStyleAt(caretPos)
+            if (chr(charAfter) in "[]{}()" and
+                styleAfter == stc.STC_P_OPERATOR):
+                braceAtCaret = caretPos
+        if braceAtCaret >= 0:
+            braceOpposite = self.BraceMatch(braceAtCaret)
+        if braceAtCaret != -1  and braceOpposite == -1:
+            self.BraceBadLight(braceAtCaret)
+        else:
+            self.BraceHighlight(braceAtCaret, braceOpposite)
+
+    def _show_help(self):
+        caretPos = self.GetCurrentPos()
+        if caretPos > 0:
+            print self.WordEndPosition(caretPos, True)
+            print self.WordStartPosition(caretPos, True)
+        
     def Goto(self, line, statwin):
         self.GotoLine(int(line)-1)
         self.SetFocus()
@@ -238,6 +297,7 @@ class SrcCtrl(stc.StyledTextCtrl):
 
 def create(ws, filename=None):
     win = SrcCtrl(ws.book, filename) 
+    win.Bind(wx.EVT_KEY_DOWN, ws.OnKeyPressed)
     if filename:
         title = os.path.basename(filename)
     else:

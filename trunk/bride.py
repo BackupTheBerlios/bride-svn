@@ -37,18 +37,33 @@ class Workspace(wx.Frame):
         wx.Frame.__init__(self, None, -1, title)
         self.book = wx.Notebook(self, -1)
         self.statwin = StatusWindow.create(self, (0,550), (800,50))
+        self.help = wx.StaticText(self, -1, 'help')
         self.recent = app.recent
         self.open = []
         self.InitMenu()
         self.InitSizer()
         self.SetSize((800, 600))
+        self.Bind(wx.EVT_KEY_DOWN, self.OnKeyPressed)
+        self.CTRLMAP = {312+999: lambda: self.book.AdvanceSelection(False),
+                        313+999: lambda: self.book.AdvanceSelection(True),
+                        ord('X')+999: self.OnCtrlX}
+        self.CTRLXMAP = {ord('F')+999: lambda: self.OnOpen(None),
+                         ord('S')+999: lambda: self.OnSave(None),
+                         ord('W')+999: lambda: self.OnSaveAs(None),
+                         ord('B'): lambda: self.OnNew(None),
+                         ord('K'): lambda: self.OnClose(None),
+                         ord('C')+999: lambda: self.OnExit(None)}
+        self.ctrlx = False
 
     def InitSizer(self):
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.book, 1, wx.EXPAND)
-        sizer.Add(self.statwin, 0, wx.EXPAND)
-        self.SetSizer(sizer)
-        sizer.SetSizeHints(self)
+        mainsizer = wx.BoxSizer(wx.VERTICAL)
+        childsizer = wx.BoxSizer(wx.HORIZONTAL)
+        childsizer.Add(self.book, 1, wx.EXPAND)
+        childsizer.Add(self.help, 1, wx.EXPAND)
+        mainsizer.Add(childsizer, 1, wx.EXPAND)
+        mainsizer.Add(self.statwin, 0, wx.EXPAND)
+        self.SetSizer(mainsizer)
+        mainsizer.SetSizeHints(self)
 
     ######### MENU MANAGEMENT ################
 
@@ -155,7 +170,9 @@ class Workspace(wx.Frame):
             self.GetSelectedPage().Save(filename)
 
     def OnClose(self, evt):
-        self.ClosePage(self.book.GetSelection())
+        res = self.ClosePage(self.book.GetSelection())
+        if res == -1:
+            self.ClosePage(self.book.GetSelection(), False)
 
     def OnCloseAll(self, evt):
         ask = True
@@ -266,7 +283,7 @@ class Workspace(wx.Frame):
         page = self.book.GetPage(index)
         if page.IsModified() and ask:
             msg = 'Some modifications are not saved. Close anyway?'
-            dlg = wx.MessageDialog(self, msg, 'Close all', wx.YES_NO)
+            dlg = wx.MessageDialog(self, msg, 'Close page', wx.YES_NO)
             if dlg.ShowModal() == wx.ID_NO:
                 return 0
             else:
@@ -282,6 +299,28 @@ class Workspace(wx.Frame):
             return 1
         else:
             return 0
+
+    def OnKeyPressed(self, evt):
+        if self.ctrlx:
+            self.OnCtrl(evt, self.CTRLXMAP)
+        elif evt.CmdDown():
+            self.OnCtrl(evt, self.CTRLMAP)
+        else:
+            evt.Skip()
+
+    def OnCtrl(self, evt, map):
+        key = evt.KeyCode()
+        if evt.CmdDown():
+            key += 999
+        try:
+            self.ctrlx = False
+            map[key]()
+        except KeyError, e:
+            print key
+            evt.Skip()
+
+    def OnCtrlX(self):
+        self.ctrlx = True
 
 class Bride(wx.App):
     """Application class.

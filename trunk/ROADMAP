@@ -28,10 +28,10 @@ Fixes and enhancements:
  - when loading a file already opened, ask if use the same page (done)
 
 Some EMACS features:
- - EMACS keybindings
- - syntax highlighting
- - parenthesis highlighting
- - autoindent
+ - syntax highlighting (from StyledTextrCtrl demo)
+ - parenthesis highlighting (again from the demo)
+ - autoindent (basic implementation)
+ - EMACS keybindings (basic implementation)
 
 Help window from inline docs.
 
