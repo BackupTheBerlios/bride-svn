@@ -1,30 +1,38 @@
 *** 0.1 ***
 
+Integrate wx.stc.StyledTextCtrl:
+ - undo/redo (provided)
+ - cut/copy/paste (provided)
+ - display of line numbers (provided)
+
 Basic editing functions:
- - cut/copy/paste (done)
- - display of line numbers (done)
  - recent files (done)
  - goto line (done)
  - search (done)
  - replace (done)
 
-Integrate wx.stc.StyledTextCtrl:
- - undo/redo
- 
 Refactoring 
  - move global app data (recent files list, ...) to Bride object
+ - new mechanism for menu initialization
+ - enabling/disabling of menu commands if documents are opened or not
 
 *** 0.2 ***
 
 Stable branch of 0.1:
+ - storing workspace settings on exit
+ - ensure visibility of the selection under search/replace
+ - reimplement IsModified() in SrcCtrl to prevent from unadvertendly close modified files
  - introduce sizers
  - confirmation before exiting if unsaved files are present
  - focus (done)
  - fonts configuration
  - solve 'conflict' when reopening the same file
  - check if Cut/Copy/Paste of TextCtrl work
- - refactoring 
  - dynamic update of recent files
+ - tabs-navigation 
+ - improve statwin input mechanism
+ - refactoring 
+ - testing on win32
 
 *** 0.3 ***
 
@@ -40,6 +48,10 @@ implement EMACS features I'm currently using:
 
 Stable branch of 0.3
 
+Distribution files
+
+Documentation
+
 *** 0.5 ***
 
 Advanced code features:
@@ -48,12 +60,6 @@ Advanced code features:
  - block compress/expand
  - syntax check
 
-*** 0.6 ***
-
-Stable branch of 0.5
-
-*** 0.7 ***
-
 Integration with external tools:
  - versioning systems (subversion)
  - docs generation (epydoc)
@@ -61,7 +67,8 @@ Integration with external tools:
  - code static check (pychecker)
  - interactive shell (IPython)
 
-*** 1.0 ***
+*** 0.6 ***
 
-Stable branch of 0.7
+Stable branch of 0.5
+
 
