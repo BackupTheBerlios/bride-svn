@@ -2,7 +2,7 @@
 
 """
 
-import keyword
+import keyword, os.path
 import wx
 import wx.stc as stc
 
@@ -27,8 +27,15 @@ class SrcCtrl(stc.StyledTextCtrl):
 
     fold_symbols = 2
 
-    def __init__(self, parent, id):
-        stc.StyledTextCtrl.__init__(self, parent, id, wx.DefaultPosition, parent.GetSize())
+    def __init__(self, parent, filename):
+        #stc.StyledTextCtrl.__init__(self, parent, -1, wx.DefaultPosition, parent.GetSize())
+        stc.StyledTextCtrl.__init__(self, parent, -1)
+
+        self.filename = None
+        self.parent = parent
+        if filename:
+            self.Open(filename)
+
         self.CmdKeyAssign(ord('B'), stc.STC_SCMOD_CTRL, stc.STC_CMD_ZOOMIN)
         self.CmdKeyAssign(ord('N'), stc.STC_SCMOD_CTRL, stc.STC_CMD_ZOOMOUT)
 
@@ -189,5 +196,34 @@ class SrcCtrl(stc.StyledTextCtrl):
         elif kc == 65: # ASCII code for 'a'
             pass
 
-def create(parent, id):
-    return SrcCtrl(parent, id)
+    def Open(self, filename):
+        """Loads a file.
+
+        @raise: IOError
+        """
+        self.filename = filename
+        self.SetText(open(filename).read())
+        self.EmptyUndoBuffer()
+        self.Colourise(0, -1)
+        self.SetMarginType(1, stc.STC_MARGIN_NUMBER)
+        self.SetMarginWidth(1, 25)
+
+    def Save(self, filename=None):
+        if filename:
+            self.filename = filename
+        if self.filename:
+            self.SaveFile(self.filename)
+        else:
+            raise ValueError, 'no value for the filename'
+
+    def IsModified(self):
+        return False
+
+def create(ws, filename=None):
+    win = SrcCtrl(ws.book, filename) 
+    if filename:
+        title = os.path.basename(filename)
+    else:
+        title = '[new]*'
+    ws.book.AddPage(win, title, True)
+    win.SetFocus()
