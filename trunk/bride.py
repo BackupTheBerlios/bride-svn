@@ -37,7 +37,7 @@ class Workspace(wx.Frame):
         wx.Frame.__init__(self, None, -1, title)
         self.book = wx.Notebook(self, -1)
         self.statwin = StatusWindow.create(self, (0,550), (800,50))
-        self.help = wx.StaticText(self, -1, 'help')
+        self.help = wx.TextCtrl(self, -1)
         self.recent = app.recent
         self.open = []
         self.InitMenu()
@@ -321,6 +321,9 @@ class Workspace(wx.Frame):
 
     def OnCtrlX(self):
         self.ctrlx = True
+
+    def ShowDoc(self, doc):
+        self.help.SetValue(doc)
 
 class Bride(wx.App):
     """Application class.

@@ -2,7 +2,7 @@
 
 """
 
-import keyword, os.path
+import keyword, os.path, imp
 import wx
 import wx.stc as stc
 
@@ -225,11 +225,32 @@ class SrcCtrl(stc.StyledTextCtrl):
         else:
             self.BraceHighlight(braceAtCaret, braceOpposite)
 
+    def GetWordAt(self, pos):
+        start = self.WordStartPosition(pos, True)
+        end = self.WordEndPosition(pos, True)
+        return self.GetTextRange(start, end), start, end 
+        
+
     def _show_help(self):
         caretPos = self.GetCurrentPos()
-        if caretPos > 0:
-            print self.WordEndPosition(caretPos, True)
-            print self.WordStartPosition(caretPos, True)
+        if (caretPos > 0 and
+            self.GetStyleAt(caretPos-1) == stc.STC_P_IDENTIFIER):
+            pos = caretPos
+            word, start, end = self.GetWordAt(pos)
+            tokens = [word,]
+            while self.GetTextRange(start-1, start) == '.':
+                pos = start-1
+                word, start, end = self.GetWordAt(pos)
+                tokens.insert(0, word)
+            mod = self.module
+            for t in tokens:
+                try:
+                    mod = mod.__dict__[t]
+                except KeyError:
+                    return None
+            doc = mod.__doc__
+            if doc != None:
+                self.parent.GetParent().ShowDoc(doc)
         
     def Goto(self, line, statwin):
         self.GotoLine(int(line)-1)
@@ -283,6 +304,9 @@ class SrcCtrl(stc.StyledTextCtrl):
         self.Colourise(0, -1)
         self.SetMarginType(1, stc.STC_MARGIN_NUMBER)
         self.SetMarginWidth(1, 25)
+        modname = os.path.basename(filename)[:-3]
+        file, fn, desc = imp.find_module(modname)
+        self.module = imp.load_module(modname, file, fn, desc)
 
     def Save(self, filename=None):
         if filename:
