@@ -20,9 +20,9 @@ Refactoring
 *** 0.2 ***
 
 Fixes and enhancements:
+ - using GetModify() from StyledTextCtrl (done)
  - storing workspace settings on exit
  - ensure visibility of the selection under search/replace
- - reimplement IsModified() in SrcFrame to prevent from unadvertendly close modified files
  - add star in doc name when the doc is modified
  - confirmation before exiting if unsaved files are present
  - fonts configuration

@@ -168,30 +168,30 @@ class Workspace(wx.Frame):
     ######### EDIT MENU COMMANDS ################
 
     def OnUndo(self, evt):
-        text = self.GetSelectedPage().text
+        text = self.GetSelectedPage()
         if text.CanUndo():
             text.Undo()
 
     def OnRedo(self, evt):
-        text = self.GetSelectedPage().text
+        text = self.GetSelectedPage()
         if text.CanRedo():
             text.Redo()
 
     def OnCut(self, evt):
-        self.GetSelectedPage().text.Cut()
+        self.GetSelectedPage().Cut()
 
     def OnCopy(self, evt):
-        self.GetSelectedPage().text.Copy()
+        self.GetSelectedPage().Copy()
 
     def OnPaste(self, evt):
-        self.GetSelectedPage().text.Paste()
+        self.GetSelectedPage().Paste()
 
     def OnGoto(self, evt):
-        text = self.GetSelectedPage().text
+        text = self.GetSelectedPage()
         self.statwin.PassCommand(text.Goto)
 
     def OnSearch(self, evt):
-        text = self.GetSelectedPage().text
+        text = self.GetSelectedPage()
         self.statwin.PassCommand(text.Search)
 
     def OnReplace(self, evt):
@@ -201,7 +201,7 @@ class Workspace(wx.Frame):
             dlg = wx.TextEntryDialog(self, "Replace '%s' with" % sub)
             if dlg.ShowModal() == wx.ID_OK:
                 rep = dlg.GetValue()
-                self.GetSelectedPage().text.OnReplace(sub, rep)
+                self.GetSelectedPage().OnReplace(sub, rep)
 
     ######### TOOLS MENU COMMANDS ################
 

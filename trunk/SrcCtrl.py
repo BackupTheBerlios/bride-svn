@@ -217,7 +217,7 @@ class SrcCtrl(stc.StyledTextCtrl):
             raise ValueError, 'no value for the filename'
 
     def IsModified(self):
-        return False
+        return self.GetModify()
 
 def create(ws, filename=None):
     win = SrcCtrl(ws.book, filename) 
