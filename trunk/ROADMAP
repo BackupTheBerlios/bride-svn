@@ -1,0 +1,68 @@
+*** 0.1 ***
+
+Basic editing functions:
+ - cut/copy/paste (done)
+ - display of line numbers (done)
+ - recent files (done)
+ - goto line (done)
+ - search (done)
+ - replace (done)
+ 
+Refactoring 
+ - move global app data (recent files list, ...) to Bride object
+
+*** 0.2 ***
+
+Stable branch of 0.1:
+ - introduce sizers
+ - confirmation before exiting if unsaved files are present
+ - focus (done)
+ - fonts configuration
+ - solve 'conflict' when reopening the same file
+ - check if Cut/Copy/Paste of TextCtrl work
+ - refactoring 
+ - dynamic update of recent files
+
+*** 0.3 ***
+
+Undo/redo
+
+Consider use of wx.stc.StyledTextCtrl
+
+implement EMACS features I'm currently using:
+ - customizable keybindings + EMACS mode
+ - syntax highlight
+ - parenthesis highlighting
+ - autoindent
+ - indent/unindent
+ - comment/uncomment
+
+*** 0.4 ***
+
+Stable branch of 0.3
+
+*** 0.5 ***
+
+Advanced code features:
+ - help window
+ - autocompletion
+ - block compress/expand
+ - syntax check
+
+*** 0.6 ***
+
+Stable branch of 0.5
+
+*** 0.7 ***
+
+Integration with external tools:
+ - versioning systems (subversion)
+ - docs generation (epydoc)
+ - code metrics (pylint)
+ - code static check (pychecker)
+ - interactive shell (IPython)
+
+*** 1.0 ***
+
+Stable branch of 0.7
+
