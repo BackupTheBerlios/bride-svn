@@ -6,12 +6,13 @@ __version__ = 0.1
 
 import optparse, os, cPickle
 import wx
-import SrcFrame, StatusWindow
+import StatusWindow, SrcCtrl
 
 try:
     from IPython.Shell import IPShellWX
 except ImportError, e:
     print 'IPython support disabled'
+    __HAS_IPYTHON__ = False
 else:
     __HAS_IPYTHON__ = True
     import IPythonFrame
@@ -24,16 +25,39 @@ ID_RECENT_FILES = 6004 # skip to 6014 (10 empty slots)
 ID_IPYTHON = 6014
 
 class Workspace(wx.Frame):
+    """Class implementing the workspace of the IDE.
+
+    """
     def __init__(self, app):
+        """Constructor.
+
+        Creates the frames and menus.
+        """
         title = 'brIDE - v. %s' % __version__
-        wx.Frame.__init__(self, None, -1, title, (-1,-1), (800,600))
-        self.book = wx.Notebook(self, -1, size=(800,550))
+        wx.Frame.__init__(self, None, -1, title)
+        self.book = wx.Notebook(self, -1)
         self.statwin = StatusWindow.create(self, (0,550), (800,50))
-        self.clip = ''
         self.recent = app.recent
         self.InitMenu()
+        self.InitSizer()
+        self.SetSize((800, 600))
+
+    def InitSizer(self):
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self.book, 1, wx.EXPAND)
+        sizer.Add(self.statwin, 0, wx.EXPAND)
+        self.SetSizer(sizer)
+        sizer.SetSizeHints(self)
+
+    ######### MENU MANAGEMENT ################
 
     def InitMenu(self):
+        """Initializes the menus.
+
+        The menu structure is defined and passed to _populate_menubar().
+        The menu with the recent files is still handled statically by
+        _add_recent_menu().
+        """
         menu = [('&File', (('&New', wx.ID_NEW, self.OnNew),
                            ('&Open', wx.ID_OPEN, self.OnOpen),
                            ('&Save', wx.ID_SAVE, self.OnSave),
@@ -56,13 +80,25 @@ class Workspace(wx.Frame):
             menu.append(('&Tools', (('IPython', ID_IPYTHON, self.OnIPython),)))
         mbar = wx.MenuBar()
         self._populate_menubar(mbar, menu)
-        recent = wx.Menu()
-        for i, f in enumerate(self.recent[::-1]):
-            recent.Append(ID_RECENT_FILES+i, os.path.basename(f))
-            wx.EVT_MENU(self, ID_RECENT_FILES+i, self.OnOpenRecent)
-        mbar.GetMenu(0).AppendSeparator()
-        mbar.GetMenu(0).AppendMenu(ID_RECENT, '&Recent', recent)
+        self._add_recent_menu(mbar)
         self.SetMenuBar(mbar)
+        self.EnableMenuCommands(False)
+
+    def EnableMenuCommands(self, enable):
+        """Enables the menu items connected to documents operations.
+
+        """
+        mbar = self.GetMenuBar()
+        hierarchy = (('File', ('Close', 'Close all', 'Save', 'Save as...')),
+                     ('Edit', None))
+        for m in hierarchy:
+            if m[1] == None:
+                mbar.EnableTop(mbar.FindMenu(m[0]), enable)
+            else:
+                menu = mbar.GetMenu(mbar.FindMenu(m[0]))
+                for i in m[1]:
+                    item = menu.FindItem(i)
+                    menu.Enable(item, enable)
 
     def _populate_menubar(self, mbar, hierarchy):
         for m in hierarchy:
@@ -77,21 +113,19 @@ class Workspace(wx.Frame):
             else:
                 menu.Append(i[1], i[0])
                 wx.EVT_MENU(self, i[1], i[2])
+
+    def _add_recent_menu(self, mbar):
+        recent = wx.Menu()
+        for i, f in enumerate(self.recent[::-1]):
+            recent.Append(ID_RECENT_FILES+i, os.path.basename(f))
+            wx.EVT_MENU(self, ID_RECENT_FILES+i, self.OnOpenRecent)
+        mbar.GetMenu(0).AppendSeparator()
+        mbar.GetMenu(0).AppendMenu(ID_RECENT, '&Recent', recent)
                 
-    def OnIPython(self, evt):
-        if __HAS_IPYTHON__:
-            ipshell = IPShellWX()
-            ipshell.run()
-            #IPythonFrame.create(self)
-        else:
-            pass
-
-    def OnExit(self, evt):
-        if self.OnCloseAll(evt):
-            self.Close()
-
+    ######### FILE MENU COMMANDS ################
+        
     def OnNew(self, evt):
-        SrcFrame.create(self)
+        SrcCtrl.create(self)
 
     def OnOpen(self, evt):
         filename = wx.FileSelector('Open file', '', '', '',
@@ -100,34 +134,102 @@ class Workspace(wx.Frame):
         if filename != '':
             self.Load(filename)
             
-    def OnOpenRecent(self, evt):
-        self.Load(self.recent[ID_RECENT_FILES-evt.GetId()-1])
-
-    def Load(self, filename):
-        SrcFrame.create(self, filename)
-        absname = os.path.abspath(filename)
-        if absname in self.recent:
-            self.recent.remove(absname)
-        self.recent.append(absname)
-        
     def OnSave(self, evt):
-        sel = self.book.GetSelection()
-        if sel != -1:
-            page = self.book.GetPage(sel)
-            if page.filename:
-                page.Save()
-            else:
-                self.OnSaveAs(evt)
+        page = self.GetSelectedPage()
+        if page.filename:
+            page.Save()
+        else:
+            self.OnSaveAs(evt)
 
-    def OnSaveAs(self, evt): 
+    def OnSaveAs(self, evt):
         filename = wx.FileSelector('Save file', '', '', 'py',
                                    'python files (*.py)|*.py',
                                    wx.SAVE, self)
         if filename != '':
-            sel = self.book.GetSelection()
-            if sel != -1:
-                self.book.GetPage(sel).Save(filename)
+            self.GetSelectedPage().Save(filename)
 
+    def OnClose(self, evt):
+        self.ClosePage(self.book.GetSelection())
+
+    def OnCloseAll(self, evt):
+        while self.book.GetPageCount() != 0:
+            if not self.ClosePage(0):
+                print 'some of the docs have not been saved before'
+                return False
+        return True
+
+    def OnExit(self, evt):
+        if self.OnCloseAll(evt):
+            self.Close()
+
+    def OnOpenRecent(self, evt):
+        self.Load(self.recent[ID_RECENT_FILES-evt.GetId()-1])
+
+    ######### EDIT MENU COMMANDS ################
+
+    def OnUndo(self, evt):
+        text = self.GetSelectedPage().text
+        if text.CanUndo():
+            text.Undo()
+
+    def OnRedo(self, evt):
+        text = self.GetSelectedPage().text
+        if text.CanRedo():
+            text.Redo()
+
+    def OnCut(self, evt):
+        self.GetSelectedPage().text.Cut()
+
+    def OnCopy(self, evt):
+        self.GetSelectedPage().text.Copy()
+
+    def OnPaste(self, evt):
+        self.GetSelectedPage().text.Paste()
+
+    def OnGoto(self, evt):
+        text = self.GetSelectedPage().text
+        self.statwin.PassCommand(text.Goto)
+
+    def OnSearch(self, evt):
+        text = self.GetSelectedPage().text
+        self.statwin.PassCommand(text.Search)
+
+    def OnReplace(self, evt):
+        dlg = wx.TextEntryDialog(self, 'Replace')
+        if dlg.ShowModal() == wx.ID_OK:
+            sub = dlg.GetValue()
+            dlg = wx.TextEntryDialog(self, "Replace '%s' with" % sub)
+            if dlg.ShowModal() == wx.ID_OK:
+                rep = dlg.GetValue()
+                self.GetSelectedPage().text.OnReplace(sub, rep)
+
+    ######### TOOLS MENU COMMANDS ################
+
+    def OnIPython(self, evt):
+        """Creates a page with an IPython shell.
+
+        Still under construction.
+        """
+        if __HAS_IPYTHON__:
+            ipshell = IPShellWX()
+            ipshell.run()
+            #IPythonFrame.create(self)
+        else:
+            pass
+        
+    ######### OTHERS METHODS ################
+
+    def Load(self, filename):
+        SrcCtrl.create(self, filename)
+        self.EnableMenuCommands(True)
+        absname = os.path.abspath(filename)
+        if absname in self.recent:
+            self.recent.remove(absname)
+        self.recent.append(absname)
+
+    def GetSelectedPage(self):
+        return self.book.GetPage(self.book.GetSelection())
+        
     def ClosePage(self, index):
         if self.book.GetPage(index).IsModified():
             return False
@@ -135,77 +237,9 @@ class Workspace(wx.Frame):
             success = self.book.DeletePage(index)
             if self.book.GetPageCount() > 0:
                 self.book.SetSelection(0)
+            else:
+                self.EnableMenuCommands(False)
             return success
-
-    def OnClose(self, evt):
-        sel = self.book.GetSelection()
-        if sel != -1:
-            self.ClosePage(sel)
-
-    def OnCloseAll(self, evt):
-        while self.book.GetPageCount() != 0:
-            if not self.ClosePage(0):
-                print 'some of the docs have not been save before'
-                return False
-        return True
-
-    def OnUndo(self, evt):
-        sel = self.book.GetSelection()
-        if sel != -1:
-            if self.book.GetPage(sel).text.CanUndo():
-                self.book.GetPage(sel).text.Undo()
-            else:
-                print 'No Undo available'
-
-    def OnRedo(self, evt):
-        sel = self.book.GetSelection()
-        if sel != -1:
-            if self.book.GetPage(sel).text.CanRedo():
-                self.book.GetPage(sel).text.Redo()
-            else:
-                print 'No Redo available'
-
-    def OnCut(self, evt):
-        sel = self.book.GetSelection()
-        if sel != -1:
-            self.clip = self.book.GetPage(sel).text.Cut()
-
-    def OnCopy(self, evt):
-        sel = self.book.GetSelection()
-        if sel != -1:
-            self.clip = self.book.GetPage(sel).text.Copy()
-
-    def OnPaste(self, evt):
-        sel = self.book.GetSelection()
-        if sel != -1:
-            self.clip = self.book.GetPage(sel).text.Paste()
-
-    def OnGoto(self, evt):
-        sel = self.book.GetSelection()
-        if sel != -1:
-            self.statwin.PassCommand(self.book.GetPage(sel).text.Goto)
-
-    def OnSearch(self, evt):
-        sel = self.book.GetSelection()
-        if sel != -1:
-            self.statwin.PassCommand(self.book.GetPage(sel).text.Search)
-
-    def OnReplace(self, evt):
-        sel = self.book.GetSelection()
-        if sel != -1:
-            dlg = wx.TextEntryDialog(self, 'Replace')
-            if dlg.ShowModal() == wx.ID_OK:
-                sub = dlg.GetValue()
-                dlg = wx.TextEntryDialog(self, "Replace '%s' with" % sub)
-                if dlg.ShowModal() == wx.ID_OK:
-                    rep = dlg.GetValue()
-                    self.book.GetPage(sel).text.OnReplace(sub, rep)
-
-    def PostToActive(self, evt):
-        wx.PostEvent(self.GetActiveChild().text, evt)
-
-    def SetStatusText(self, text):
-        self.statwin.SetText(text)
 
 class Bride(wx.App):
     """Application class.
