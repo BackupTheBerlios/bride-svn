@@ -21,7 +21,7 @@ Refactoring
 Stable branch of 0.1:
  - storing workspace settings on exit
  - ensure visibility of the selection under search/replace
- - reimplement IsModified() in SrcCtrl to prevent from unadvertendly close modified files
+ - reimplement IsModified() in SrcFrame to prevent from unadvertendly close modified files
  - introduce sizers
  - confirmation before exiting if unsaved files are present
  - focus (done)
