@@ -149,9 +149,6 @@ class SrcCtrl(stc.StyledTextCtrl):
 
         self.frame = parent
 
-    def IsModified(self):
-        return False
-
     def Goto(self, line, statwin):
         self.GotoLine(int(line)-1)
         self.SetFocus()

@@ -52,6 +52,9 @@ class SrcFrame(wx.Window):
         x, y = self.text.PositionToXY(self.text.GetInsertionPoint())
         self.parent.GetParent().SetStatusText('ROW = %d | COL = %d' % (x, y+1))
 
+    def IsModified(self):
+        return False
+
 def create(ws, filename=None):
     win = SrcFrame(ws.book, -1, filename) 
     if filename:
