@@ -22,21 +22,24 @@ Refactoring
 Fixes and enhancements:
  - using GetModify() from StyledTextCtrl (done)
  - confirmation before exiting if unsaved files are present (done)
- - bug in recent files list update
+ - dynamic update of recent files menu (done)
+ - tabs-navigation (done)
+ - ensure visibility of the selection under search/replace (done)
+ - bug in recent files list update (on fedora, to be checked)
  - storing workspace settings on exit
- - ensure visibility of the selection under search/replace
  - add star in doc name when the doc is modified
- - fonts configuration
- - solve 'conflict' when reopening the same file
- - dynamic update of recent files menu
- - tabs-navigation 
  - improve statwin input mechanism
+ - solve 'conflict' when reopening the same file (?)
 
 Testing on win32
 
 Refactoring
 
 *** 0.3 ***
+
+Configure StyledTextCtrl:
+ - fonts
+ - ...
 
 implement EMACS features I'm currently using:
  - customizable keybindings + EMACS mode

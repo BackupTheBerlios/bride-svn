@@ -36,8 +36,15 @@ class SrcCtrl(stc.StyledTextCtrl):
         if filename:
             self.Open(filename)
 
+        # set up tab navigation
+        self.CmdKeyAssign(stc.STC_KEY_PRIOR, stc.STC_SCMOD_CTRL,
+                          stc.STC_CMD_ZOOMOUT)
+        self.CmdKeyAssign(stc.STC_KEY_NEXT, stc.STC_SCMOD_CTRL,
+                          stc.STC_CMD_ZOOMOUT)
+
         self.CmdKeyAssign(ord('B'), stc.STC_SCMOD_CTRL, stc.STC_CMD_ZOOMIN)
         self.CmdKeyAssign(ord('N'), stc.STC_SCMOD_CTRL, stc.STC_CMD_ZOOMOUT)
+
 
         self.SetLexer(stc.STC_LEX_PYTHON)
         self.SetKeyWords(0, " ".join(keyword.kwlist))
@@ -105,7 +112,7 @@ class SrcCtrl(stc.StyledTextCtrl):
 
         #self.Bind(stc.EVT_STC_UPDATEUI, self.OnUpdateUI)
         #self.Bind(stc.EVT_STC_MARGINCLICK, self.OnMarginClick)
-        #self.Bind(wx.EVT_KEY_DOWN, self.OnKeyPressed)
+        self.Bind(wx.EVT_KEY_DOWN, self.OnKeyPressed)
 
         # Make some styles,  The lexer defines what each style is used for, we
         # just have to define what each style looks like.  This set is adapted from
@@ -156,6 +163,15 @@ class SrcCtrl(stc.StyledTextCtrl):
 
         self.frame = parent
 
+    def OnKeyPressed(self, event):
+        key = event.KeyCode()
+        if key == 313 and event.ControlDown(): # CTRL+PGDWN
+            self.parent.AdvanceSelection(True)
+        elif key == 312 and event.ControlDown(): # CTRL+PGUP
+            self.parent.AdvanceSelection(False)
+        else:
+            event.Skip()
+
     def Goto(self, line, statwin):
         self.GotoLine(int(line)-1)
         self.SetFocus()
@@ -178,6 +194,7 @@ class SrcCtrl(stc.StyledTextCtrl):
             # self.SetSelection(self.GetSelectionStart(),
             #                   self.GetSelectionEnd())
             self.SetFocus()
+            self.EnsureCaretVisible()
         
     def OnReplace(self, sub, rep):
         handler = lambda evt: self.ReplaceEvtHandler(evt, sub, rep)

@@ -115,12 +115,17 @@ class Workspace(wx.Frame):
                 wx.EVT_MENU(self, i[1], i[2])
 
     def _add_recent_menu(self, mbar):
-        recent = wx.Menu()
-        for i, f in enumerate(self.recent[::-1]):
-            recent.Append(ID_RECENT_FILES+i, os.path.basename(f))
-            wx.EVT_MENU(self, ID_RECENT_FILES+i, self.OnOpenRecent)
+        self.recmenu = wx.Menu()
         mbar.GetMenu(0).AppendSeparator()
-        mbar.GetMenu(0).AppendMenu(ID_RECENT, '&Recent', recent)
+        mbar.GetMenu(0).AppendMenu(ID_RECENT, '&Recent', self.recmenu)
+        self._update_recent_menu()
+                
+    def _update_recent_menu(self):
+        for i in xrange(self.recmenu.GetMenuItemCount()):
+            self.recmenu.Delete(ID_RECENT_FILES+i)
+        for i, f in enumerate(self.recent[::-1]):
+            self.recmenu.Append(ID_RECENT_FILES+i, os.path.basename(f))
+            wx.EVT_MENU(self, ID_RECENT_FILES+i, self.OnOpenRecent)
                 
     ######### FILE MENU COMMANDS ################
         
@@ -166,7 +171,11 @@ class Workspace(wx.Frame):
             self.Close()
 
     def OnOpenRecent(self, evt):
-        self.Load(self.recent[ID_RECENT_FILES-evt.GetId()-1])
+        filename = self.recent[ID_RECENT_FILES-evt.GetId()-1]
+        try:
+            self.Load(filename)
+        except IOError:
+            self.recent.remove(filename)
 
     ######### EDIT MENU COMMANDS ################
 
@@ -229,6 +238,7 @@ class Workspace(wx.Frame):
         if absname in self.recent:
             self.recent.remove(absname)
         self.recent.append(absname)
+        self._update_recent_menu()
 
     def GetSelectedPage(self):
         return self.book.GetPage(self.book.GetSelection())
