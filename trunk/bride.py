@@ -47,7 +47,7 @@ class Workspace(wx.Frame):
         self._populate_menubar(mbar, menu)
         recent = wx.Menu()
         for i, f in enumerate(self.recent[::-1]):
-            recent.Append(ID_RECENT_FILES+i, f)
+            recent.Append(ID_RECENT_FILES+i, os.path.basename(f))
             wx.EVT_MENU(self, ID_RECENT_FILES+i, self.OnOpenRecent)
         mbar.GetMenu(0).AppendSeparator()
         mbar.GetMenu(0).AppendMenu(ID_RECENT, '&Recent', recent)
@@ -83,13 +83,14 @@ class Workspace(wx.Frame):
             self.Load(filename)
             
     def OnOpenRecent(self, evt):
-        self.Load(self.recent[evt.GetId()-ID_RECENT_FILES])
+        self.Load(self.recent[ID_RECENT_FILES-evt.GetId()-1])
 
     def Load(self, filename):
         SrcFrame.create(self, filename)
-        if filename in self.recent:
-            self.recent.remove(filename)
-        self.recent.append(filename)
+        absname = os.path.abspath(filename)
+        if absname in self.recent:
+            self.recent.remove(absname)
+        self.recent.append(absname)
         
     def OnSave(self, evt):
         sel = self.book.GetSelection()
@@ -139,12 +140,17 @@ class Workspace(wx.Frame):
                 print 'No Undo available'
 
     def OnRedo(self, evt):
-        pass
+        sel = self.book.GetSelection()
+        if sel != -1:
+            if self.book.GetPage(sel).text.CanRedo():
+                self.book.GetPage(sel).text.Redo()
+            else:
+                print 'No Redo available'
 
     def OnCut(self, evt):
         sel = self.book.GetSelection()
         if sel != -1:
-            self.clip = self.book.GetPage(sel).text.Copy(True)
+            self.clip = self.book.GetPage(sel).text.Cut()
 
     def OnCopy(self, evt):
         sel = self.book.GetSelection()
@@ -154,7 +160,7 @@ class Workspace(wx.Frame):
     def OnPaste(self, evt):
         sel = self.book.GetSelection()
         if sel != -1:
-            self.clip = self.book.GetPage(sel).text.Paste(self.clip)
+            self.clip = self.book.GetPage(sel).text.Paste()
 
     def OnGoto(self, evt):
         sel = self.book.GetSelection()
