@@ -21,10 +21,11 @@ Refactoring
 
 Fixes and enhancements:
  - using GetModify() from StyledTextCtrl (done)
+ - confirmation before exiting if unsaved files are present (done)
+ - bug in recent files list update
  - storing workspace settings on exit
  - ensure visibility of the selection under search/replace
  - add star in doc name when the doc is modified
- - confirmation before exiting if unsaved files are present
  - fonts configuration
  - solve 'conflict' when reopening the same file
  - dynamic update of recent files menu

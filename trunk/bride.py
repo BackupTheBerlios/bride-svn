@@ -152,10 +152,13 @@ class Workspace(wx.Frame):
         self.ClosePage(self.book.GetSelection())
 
     def OnCloseAll(self, evt):
+        ask = True
         while self.book.GetPageCount() != 0:
-            if not self.ClosePage(0):
-                print 'some of the docs have not been saved before'
+            res = self.ClosePage(0, ask)
+            if res == 0:
                 return False
+            elif res == -1:
+                ask = False
         return True
 
     def OnExit(self, evt):
@@ -230,16 +233,23 @@ class Workspace(wx.Frame):
     def GetSelectedPage(self):
         return self.book.GetPage(self.book.GetSelection())
         
-    def ClosePage(self, index):
-        if self.book.GetPage(index).IsModified():
-            return False
-        else:
-            success = self.book.DeletePage(index)
+    def ClosePage(self, index, ask=True):
+        if self.book.GetPage(index).IsModified() and ask:
+            msg = 'Some modifications are not saved. Close anyway?'
+            dlg = wx.MessageDialog(self, msg, 'Close all', wx.YES_NO)
+            if dlg.ShowModal() == wx.ID_NO:
+                return 0
+            else:
+                return -1
+        success = self.book.DeletePage(index)
+        if success:
             if self.book.GetPageCount() > 0:
                 self.book.SetSelection(0)
             else:
                 self.EnableMenuCommands(False)
-            return success
+            return 1
+        else:
+            return 0
 
 class Bride(wx.App):
     """Application class.
