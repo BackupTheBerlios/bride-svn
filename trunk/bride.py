@@ -15,76 +15,61 @@ ID_RECENT = 6003
 ID_RECENT_FILES = 6004 # skip to 6014 (10 empty slots)
 
 class Workspace(wx.Frame):
-    def __init__(self, parent, cfgdir):
+    def __init__(self, app):
         title = 'brIDE - v. %s' % __version__
-        wx.Frame.__init__(self, parent, -1, title, (-1,-1), (800,600))
+        wx.Frame.__init__(self, None, -1, title, (-1,-1), (800,600))
         self.book = wx.Notebook(self, -1, size=(800,550))
         self.statwin = StatusWindow.create(self, (0,550), (800,50))
         self.clip = ''
-        try:
-            f = open(cfgdir+'recent.pick')
-        except IOError:
-            self.recent = []
-        else:
-            self.recent = cPickle.load(f)
-        self.cfgdir = cfgdir
+        self.recent = app.recent
         self.InitMenu()
 
     def InitMenu(self):
+        menu = (('&File', (('&New', wx.ID_NEW, self.OnNew),
+                           ('&Open', wx.ID_OPEN, self.OnOpen),
+                           ('&Save', wx.ID_SAVE, self.OnSave),
+                           ('Save as...', wx.ID_SAVEAS, self.OnSaveAs),
+                           None,
+                           ('&Close', wx.ID_CLOSE, self.OnClose),
+                           ('Close all', wx.ID_CLOSE_ALL, self.OnCloseAll),
+                           ('E&xit', wx.ID_EXIT, self.OnExit))),
+                ('&Edit', (('Undo', wx.ID_UNDO, self.OnUndo),
+                           ('Redo', wx.ID_REDO, self.OnRedo),
+                           None,
+                           ('Cut', wx.ID_CUT, self.OnCut),
+                           ('Copy', wx.ID_COPY, self.OnCopy),
+                           ('Paste', wx.ID_PASTE, self.OnPaste),
+                           None,
+                           ('Goto...', ID_GOTO, self.OnGoto),
+                           ('Search...', ID_SEARCH, self.OnSearch),
+                           ('Replace...', ID_REPLACE, self.OnReplace))))
         mbar = wx.MenuBar()
-        file_menu = wx.Menu()
-        file_menu.Append(wx.ID_NEW, '&New')
-        wx.EVT_MENU(self, wx.ID_NEW, self.OnNew)
-        file_menu.Append(wx.ID_OPEN, '&Open...')
-        wx.EVT_MENU(self, wx.ID_OPEN, self.OnOpen)
-        file_menu.Append(wx.ID_SAVE, '&Save')
-        wx.EVT_MENU(self, wx.ID_SAVE, self.OnSave)
-        file_menu.Append(wx.ID_SAVEAS, 'Save as...')
-        wx.EVT_MENU(self, wx.ID_SAVEAS, self.OnSaveAs)
-        file_menu.AppendSeparator()
+        self._populate_menubar(mbar, menu)
         recent = wx.Menu()
         for i, f in enumerate(self.recent[::-1]):
             recent.Append(ID_RECENT_FILES+i, f)
             wx.EVT_MENU(self, ID_RECENT_FILES+i, self.OnOpenRecent)
-        file_menu.AppendMenu(ID_RECENT, '&Recent', recent)
-        file_menu.AppendSeparator()
-        file_menu.Append(wx.ID_CLOSE, '&Close')
-        wx.EVT_MENU(self, wx.ID_CLOSE, self.OnClose)
-        file_menu.Append(wx.ID_CLOSE_ALL, 'Close all')
-        wx.EVT_MENU(self, wx.ID_CLOSE_ALL, self.OnCloseAll)
-        file_menu.Append(wx.ID_EXIT, 'E&xit')
-        wx.EVT_MENU(self, wx.ID_EXIT, self.OnExit)
-        mbar.Append(file_menu, '&File')
-        edit_menu = wx.Menu()
-        edit_menu.Append(wx.ID_UNDO, 'Undo')
-        wx.EVT_MENU(self, wx.ID_UNDO, self.OnUndo)
-        edit_menu.Append(wx.ID_REDO, 'Redo')
-        wx.EVT_MENU(self, wx.ID_REDO, self.PostToActive)
-        edit_menu.AppendSeparator()
-        edit_menu.Append(wx.ID_CUT, 'Cut')
-        wx.EVT_MENU(self, wx.ID_CUT, self.OnCut)
-        edit_menu.Append(wx.ID_COPY, 'Copy')
-        wx.EVT_MENU(self, wx.ID_COPY, self.OnCopy)
-        edit_menu.Append(wx.ID_PASTE, 'Paste')
-        wx.EVT_MENU(self, wx.ID_PASTE, self.OnPaste)
-        edit_menu.AppendSeparator()
-        edit_menu.Append(ID_GOTO, 'Go to line')
-        wx.EVT_MENU(self, ID_GOTO, self.OnGoto)
-        edit_menu.Append(ID_SEARCH, 'Search')
-        wx.EVT_MENU(self, ID_SEARCH, self.OnSearch)
-        edit_menu.Append(ID_REPLACE, 'Replace')
-        wx.EVT_MENU(self, ID_REPLACE, self.OnReplace)
-        mbar.Append(edit_menu, '&Edit')
+        mbar.GetMenu(0).AppendSeparator()
+        mbar.GetMenu(0).AppendMenu(ID_RECENT, '&Recent', recent)
         self.SetMenuBar(mbar)
+
+    def _populate_menubar(self, mbar, hierarchy):
+        for m in hierarchy:
+            menu = wx.Menu()
+            self._populate_menu(menu, m[1])
+            mbar.Append(menu, m[0])
+
+    def _populate_menu(self, menu, items):
+        for i in items:
+            if i == None:
+                menu.AppendSeparator()
+            else:
+                menu.Append(i[1], i[0])
+                wx.EVT_MENU(self, i[1], i[2])
+                
 
     def OnExit(self, evt):
         if self.OnCloseAll(evt):
-            try:
-                f = open(self.cfgdir+'recent.pick', 'w')
-            except IOError:
-                print 'error saving recent files list'
-            else:
-                cPickle.dump(self.recent, f)
             self.Close()
 
     def OnNew(self, evt):
@@ -153,6 +138,9 @@ class Workspace(wx.Frame):
             else:
                 print 'No Undo available'
 
+    def OnRedo(self, evt):
+        pass
+
     def OnCut(self, evt):
         sel = self.book.GetSelection()
         if sel != -1:
@@ -217,14 +205,38 @@ class Bride(wx.App):
         loads eventual files for editing.
         """
         files, cfgdir = self.initargs
-        self.checkdir(cfgdir)
-        ws = Workspace(None, cfgdir)
+        self._check_dir(cfgdir)
+        self.cfgdir = cfgdir
+        self._load_recent()
+        ws = Workspace(self)
         for f in files:
             ws.Load(f)
         ws.Show(True)
         return True
 
-    def checkdir(self, dir):
+    def _load_recent(self):
+        """Loads list of recent files.
+
+        """
+        try:
+            f = open(self.cfgdir+'recent.pick')
+        except IOError:
+            self.recent = []
+        else:
+            self.recent = cPickle.load(f)
+
+    def _save_recent(self):
+        """Saves list of recent files.
+
+        """
+        try:
+            f = open(self.cfgdir+'recent.pick', 'w')
+        except IOError:
+            print 'error saving recent files list'
+        else:
+            cPickle.dump(self.recent, f)
+        
+    def _check_dir(self, dir):
         """Checks if a directory is writable and eventually creates it.
 
         @param dir: Directory to check.
@@ -238,7 +250,11 @@ class Bride(wx.App):
                 raise e
 
     def OnExit(self):
-        print 'exit'
+        """Clean up before exiting.
+
+        It saves the lists of recent files.
+        """
+        self._save_recent()
 
 def parse_cl():
     """Parse the command line.
