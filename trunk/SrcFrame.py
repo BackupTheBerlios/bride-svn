@@ -19,8 +19,12 @@ class SrcFrame(wx.Window):
             self.Open(filename)
 
     def Open(self, filename):
+        """Loads a file.
+
+        This can raise an IOError.
+        """
         self.filename = filename
-        self.text.LoadFile(filename)
+        self.text.SetValue(open(filename).read())
 
     def Save(self, filename=None):
         if filename:
