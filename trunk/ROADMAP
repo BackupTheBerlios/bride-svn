@@ -24,12 +24,10 @@ Fixes and enhancements:
  - confirmation before exiting if unsaved files are present (done)
  - dynamic update of recent files menu (done)
  - tabs-navigation (done)
- - ensure visibility of the selection under search/replace (done)
- - bug in recent files list update (on fedora, to be checked)
- - storing workspace settings on exit
- - add star in doc name when the doc is modified
+ - ensuring visibility in search/replace (done)
  - improve statwin input mechanism
  - solve 'conflict' when reopening the same file (?)
+ - bug in recent files list update (on fedora, to be checked)
 
 Testing on win32
 
@@ -54,7 +52,7 @@ Refactoring.
 *** 0.4 ***
 
 Fixes and enhancements:
- - ...
+ - storing workspace settings on exit
 
 Distribution files
 
