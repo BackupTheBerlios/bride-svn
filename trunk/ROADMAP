@@ -12,27 +12,28 @@ Basic editing functions:
  - replace (done)
 
 Refactoring 
- - move global app data (recent files list, ...) to Bride object
- - new mechanism for menu initialization
- - enabling/disabling of menu commands if documents are opened or not
+ - move global app data (recent files list, ...) to Bride object (done)
+ - new mechanism for menu initialization (done)
+ - enabling/disabling of menu commands if documents are opened or not (done)
+ - remove SrcFrame/SrcCtrl splitting (done)
 
 *** 0.2 ***
 
-Stable branch of 0.1:
+Fixes and enhancements:
  - storing workspace settings on exit
  - ensure visibility of the selection under search/replace
  - reimplement IsModified() in SrcFrame to prevent from unadvertendly close modified files
- - introduce sizers
+ - add star in doc name when the doc is modified
  - confirmation before exiting if unsaved files are present
- - focus (done)
  - fonts configuration
  - solve 'conflict' when reopening the same file
- - check if Cut/Copy/Paste of TextCtrl work
- - dynamic update of recent files
+ - dynamic update of recent files menu
  - tabs-navigation 
  - improve statwin input mechanism
- - refactoring 
- - testing on win32
+
+Testing on win32
+
+Refactoring
 
 *** 0.3 ***
 
@@ -44,13 +45,18 @@ implement EMACS features I'm currently using:
  - indent/unindent
  - comment/uncomment
 
+Refactoring.
+
 *** 0.4 ***
 
-Stable branch of 0.3
+Fixes and enhancements:
+ - ...
 
 Distribution files
 
 Documentation
+
+Refactoring.
 
 *** 0.5 ***
 
@@ -67,8 +73,12 @@ Integration with external tools:
  - code static check (pychecker)
  - interactive shell (IPython)
 
+Refactoring.
+
 *** 0.6 ***
 
-Stable branch of 0.5
+Fixes and enhancements:
+ - ...
 
+Refactoring.
 
